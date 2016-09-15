@@ -2,20 +2,35 @@
   "name": "expensio-telegram-bot",
   "version": "0.0.1",
   "description": "Telegram bot for tracking expenses",
-  "main": "index.js",
-  "scripts": {
-    "start": "nodemon ./app/index.js"
-  },
   "author": "nikita.osadchiy",
   "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "start": "better-npm-run start"
+  },
+  "betterScripts": {
+    "start": {
+      "command": "nodemon ./app/index.js",
+      "env": {
+        "NODE_PATH": "./app",
+        "NODE_ENV": "production"
+      }
+    }
+  },
   "dependencies": {
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
+    "lodash": "^4.15.0",
+    "mongodb": "^2.2.9",
     "mongoose": "^4.5.8",
+    "node-geocoder": "^3.15.0",
     "pretty-error": "^2.0.0",
+    "superagent": "^2.2.0",
     "telegram-node-bot": "^3.0.12"
   },
   "devDependencies": {
+    "better-npm-run": "0.0.11",
+    "concurrently": "^2.2.0",
     "nodemon": "^1.10.0"
   }
 }

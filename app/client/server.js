@@ -1,5 +1,7 @@
+'use strict';
+
 const express = require('express');
-const packageInfo = require('../package.json');
+const packageInfo = require('../../package.json');
 
 const app = express();
 
