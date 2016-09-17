@@ -8,6 +8,6 @@ const StartController = require('./controllers/start');
 const SettingsController = require('./controllers/settings');
 const BalanceController = require('./controllers/balance');
 
-Bot.router.when(['/start', '/restart'], new StartController());
-Bot.router.when(['/settings'], new SettingsController());
-Bot.router.when(['/spent :sum', '/get :sum'], new BalanceController());
+Bot.router.when(['/start'], new StartController());
+Bot.router.when(['/getcountry', '/setcountry'], new SettingsController());
+Bot.router.when(['/getbalance', '/addexpense', '/addincome'], new BalanceController());

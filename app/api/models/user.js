@@ -4,33 +4,40 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 /**
+ * User Settings Schema
+ */
+
+const UserSettingsSchema = new Schema({
+  _id: { type: String, ref: 'User' },
+  country: {
+    name: { type: String },
+    code: { type: String },
+    currency: { type: String }
+  }
+});
+
+/**
  * User Schema
  */
 
 const UserSchema = new Schema({
-  id: { type: String, required: true },
+  _id: { type: String, required: true },
   first_name: { type: String, required: true },
   last_name: { type: String, required: true },
   username: { type: String, required: true },
-  settings: {
-    country: {
-      name: { type: String },
-      code: { type: String },
-      currency: { type: String }
-    }
-  },
-  balance: {
-    incomes: { type: String },
-    expenses: { type: String }
-  }
+  settings: { type : Schema.ObjectId, ref : 'UserSettings' },
+  balance: { type : Schema.ObjectId, ref : 'UserBalance' },
 });
 
 /**
  * Validations
  */
 
-UserSchema.path('id').validate((value) => {
+UserSchema.path('_id').validate((value) => {
   return value.length > 0;
 });
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = {
+  UserModel: mongoose.model('User', UserSchema),
+  UserSettingsModel: mongoose.model('UserSettings', UserSettingsSchema)
+};

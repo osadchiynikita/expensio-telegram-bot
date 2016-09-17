@@ -2,26 +2,52 @@
 
 const Telegram = require('telegram-node-bot');
 const TelegramBaseController = Telegram.TelegramBaseController;
-const request = require('superagent');
+const SettingsModel = require('../models/settings');
 const config = require('config');
+const request = require('superagent');
 
 class SettingsController extends TelegramBaseController {
-  /**
-   * @param {Scope} $
-   */
-  handle($) {
+
+  getCountry($) {
     const { id, firstName } = $.message.from;
 
-    request.get(`${config.env.apiUrl}/user/${id}`)
+    request.get(`${config.env.apiUrl}/user/${id}/settings`)
       .end((err, res) => {
-        if (err) {
+        if (res && res.body) {
+          const { country } = res.body;
+          $.sendMessage(`${firstName}, here is your current settings:\n\nCountry: <b>${country.name}</b>\nCurrency: <b>${country.currency}</b>.`, {
+            parse_mode: 'html'
+          });
+        } else {
           $.sendMessage(`${firstName}, sorry, something went wrong`);
         }
-        const { settings } = res.body;
-        $.sendMessage(`${firstName}, here is your current settings:\n\nCountry: <b>${settings.country.name}</b>\nCurrency: <b>${settings.country.currency}</b>.`, {
-          parse_mode: 'html'
+      });
+  }
+
+  setCountry($) {
+    const settingsModel = new SettingsModel;
+    const countryForm = settingsModel.getCountryForm({
+      formMessage: `Please send me your location or tell me your new country name.`
+    });
+
+    $.runForm(countryForm, (result) => {
+      const { user, country } = result.formData;
+
+      request.put(`${config.env.apiUrl}/user/${user.id}/settings`)
+        .send({ user, country })
+        .end((err, res) => {
+          $.sendMessage(`I've updated you settings with <b>${country.name}</b> as your default country and <b>${country.currency}</b> as default currency.`, {
+            parse_mode: 'html'
         });
       });
+    });
+  }
+
+  get routes() {
+    return {
+      '/getcountry': 'getCountry',
+      '/setcountry': 'setCountry'
+    }
   }
 }
 
