@@ -1,4 +1,7 @@
 {
+  "env": {
+    "apiUrl": "http://127.0.0.1:3030/api"
+  },
   "tokens": {
     "telegram": "TELEGRAM_BOT_TOKEN"
   }

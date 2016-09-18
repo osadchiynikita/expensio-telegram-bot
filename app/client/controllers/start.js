@@ -24,9 +24,13 @@ class StartController extends TelegramBaseController {
         request.post(`${config.env.apiUrl}/user/add`)
           .send({ user, country })
           .end((err, res) => {
-            $.sendMessage(`Ok, I set <b>${country.name}</b> as your default country and <b>${country.currency}</b> as default currency. You can change this settings later.\nNow you can add expenses using /addexpense and incomes using /addincome`, {
-              parse_mode: 'html'
-          });
+            if (err) console.error(err);
+            if (res.body && res.body.settings) {
+              const { country } = res.body.settings;
+              $.sendMessage(`Ok, I set <b>${country.name}</b> as your default country and <b>${country.currency}</b> as default currency. You can change this settings later.\n\nNow you can add expenses using /addexpense and incomes using /addincome`, {
+                parse_mode: 'html'
+              });
+            }
         });
 
       });
