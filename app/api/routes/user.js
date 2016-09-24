@@ -17,16 +17,14 @@ router.post('/add', users.addUser);
 // get api/user/:id
 router.get('/:id', users.getUser);
 
-
-// get api/user/:id/settings
-router.get('/:id/settings', users.getUserSettings);
-
-// put api/user/:id/settings
-router.put('/:id/settings', users.updateUserSettings);
-
+// get api/user/:id
+router.delete('/:id', users.removeUser);
 
 // get api/user/:id/balance
 router.get('/:id/balance', balance.getUserBalance);
+
+// post api/user/:id/balance/add
+router.post('/:id/balance/add', balance.addUserBalance);
 
 // put api/user/:id/balance/expenses
 router.put('/:id/balance/expenses', balance.updateUserExpenses);

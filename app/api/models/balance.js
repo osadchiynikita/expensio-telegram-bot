@@ -8,7 +8,9 @@ const Schema = mongoose.Schema;
  */
 
 const UserBalanceSchema = new Schema({
-  _id: { type: String, ref: 'User' },
+  userId: { type: String, ref: 'User' },
+  currency: { type: String },
+  balance: { type: Number },
   incomes: { type: Number },
   expenses: { type: Number }
 });
@@ -17,8 +19,12 @@ const UserBalanceSchema = new Schema({
  * Validations
  */
 
-UserBalanceSchema.path('_id').validate((value) => {
+UserBalanceSchema.path('userId').validate(value => {
   return value.length > 0;
 });
+
+UserBalanceSchema.path('currency').validate(value => {
+  return value && value.length > 0;
+})
 
 module.exports = mongoose.model('UserBalance', UserBalanceSchema)

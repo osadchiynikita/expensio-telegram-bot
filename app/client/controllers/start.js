@@ -2,7 +2,7 @@
 
 const Telegram = require('telegram-node-bot');
 const TelegramBaseController = Telegram.TelegramBaseController;
-const SettingsModel = require('../models/settings');
+const BalanceModel = require('../models/balance');
 const config = require('config');
 const request = require('superagent');
 
@@ -11,30 +11,41 @@ class StartController extends TelegramBaseController {
    * @param {Scope} $
    */
   handle($) {
-    const { firstName } = $.message.from;
-    const settingsModel = new SettingsModel;
-    const countryForm = settingsModel.getCountryForm({
-      formMessage: `Please send me your location or tell me your country. I'll use this to set your default currency.`
-    });
+    const { id, firstName } = $.message.from;
 
-    $.sendMessage(`Hi, ${firstName}, I'm Expensio and I can help you track your expenses and incomes.`).then(() => {
-      $.runForm(countryForm, (result) => {
-        const { user, country } = result.formData;
-
-        request.post(`${config.env.apiUrl}/user/add`)
-          .send({ user, country })
-          .end((err, res) => {
-            if (err) console.error(err);
-            if (res.body && res.body.settings) {
-              const { country } = res.body.settings;
-              $.sendMessage(`Ok, I set <b>${country.name}</b> as your default country and <b>${country.currency}</b> as default currency. You can change this settings later.\n\nNow you can add expenses using /addexpense and incomes using /addincome`, {
-                parse_mode: 'html'
-              });
-            }
+    request.get(`${config.env.apiUrl}/user/${id}`).end((err, res) => {
+      if (err) console.error(err);
+      if (res && res.body && res.body.userId) {
+        $.sendMessage(`${firstName}, I remember you. You can use /stop to remove your data from my memory.`);
+      } else {
+        const balanceModel = new BalanceModel;
+        const currencyForm = balanceModel.getBalanceCurrencyForm({
+          formMessage: `I'm gonna create first balance account for you. What currency do you want to use? I understand UAH, USD, EUR, etc.`,
+          formError: `Not sure this is correct currency value, please try again.`
         });
 
-      });
+        $.sendMessage(`Hi, ${firstName}, I'm Expensio and I can help you track your expenses and incomes.`).then(() => {
+          $.runForm(currencyForm, (result) => {
+            const { user, currency } = result.formData;
+
+            request.post(`${config.env.apiUrl}/user/add`)
+              .send({ user, currency })
+              .end((err, res) => {
+                if (err) console.error(err);
+                if (res.body && res.body.settings) {
+                  const { country } = res.body.settings;
+                  $.sendMessage(`Ok, I created first balance account for you.\n\nCheck it /showbalance`, {
+                    parse_mode: 'html'
+                  });
+                }
+            });
+
+          });
+        });
+      }
     });
+
+
   }
 }
 

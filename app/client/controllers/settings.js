@@ -36,7 +36,7 @@ class SettingsController extends TelegramBaseController {
       request.put(`${config.env.apiUrl}/user/${user.id}/settings`)
         .send({ user, country })
         .end((err, res) => {
-          $.sendMessage(`I've updated you settings with <b>${country.name}</b> as your default country and <b>${country.currency}</b> as default currency.`, {
+          $.sendMessage(`I've updated your settings with <b>${country.name}</b> as your default country and <b>${country.currency}</b> as default currency.`, {
             parse_mode: 'html'
         });
       });
