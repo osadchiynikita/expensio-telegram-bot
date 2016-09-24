@@ -24,25 +24,22 @@ class BalanceController {
 
     UserModel.findOne({ userId: id }, (err, user) => {
       newBalance.save((err) => {
-        if (err) {
-          res.send(err);
-        } else {
-          if (user) {
-            user.balances = [...user.balances, newBalance];
-            user.settings.activeBalanceId = newBalance;
-            user.save();
-            res.json({ message: 'New user balance created'});
-          }
+        if (err) res.send(err);
+        if (user) {
+          user.balances = [...user.balances, newBalance];
+          user.settings.activeBalanceId = newBalance;
+          user.save();
+          res.json({ message: 'New user balance created'});
         }
       });
     });
   }
 
   /**
-   * Get user balance
+   * Get user active balance
    */
 
-  getUserBalance(req, res) {
+  getUserActiveBalance(req, res) {
     const { id } = req.params;
 
     UserModel.findOne({ userId: id }, (err, user) => {
@@ -51,7 +48,19 @@ class BalanceController {
           err || !userBalance ? res.status(404).send(err || 'Not found') : res.json(userBalance);
         });
       }
-    })
+    });
+  }
+
+  /**
+   * Get user balances list
+   */
+
+  getUserBalances(req, res) {
+    const { id } = req.params;
+
+    UserBalanceModel.find({ userId: id }, (err, userBalances) => {
+      err || !userBalances ? res.status(404).send(err || 'Not found') : res.json(userBalances);
+    });
   }
 
   /**
@@ -61,15 +70,17 @@ class BalanceController {
   updateUserExpenses(req, res) {
     const { params: { id }, body: { expense } } = req;
 
-    UserBalanceModel.findOne({ userId: id }, (err, userBalance) => {
-      if (userBalance) {
-        userBalance.expenses = userBalance.expenses + expense;
-        userBalance.balance = userBalance.balance - expense;
+    UserModel.findOne({ userId: id }, (err, user) => {
+      UserBalanceModel.findOne({ userId: id, _id: user.settings.activeBalanceId }, (err, userBalance) => {
+        if (userBalance) {
+          userBalance.expenses = userBalance.expenses + expense;
+          userBalance.balance = userBalance.balance - expense;
 
-        userBalance.save((err) => {
-          err ? res.send(err) : res.json({ message: 'User balance updated' });
-        });
-      }
+          userBalance.save((err) => {
+            err ? res.send(err) : res.json({ message: 'User balance updated' });
+          });
+        }
+      });
     });
   }
 
@@ -80,15 +91,17 @@ class BalanceController {
   updateUserIncomes(req, res) {
     const { params: { id }, body: { income } } = req;
 
-    UserBalanceModel.findOne({ userId: id }, (err, userBalance) => {
-      if (userBalance) {
-        userBalance.incomes = userBalance.incomes + income;
-        userBalance.balance = userBalance.balance + income;
+    UserModel.findOne({ userId: id }, (err, user) => {
+      UserBalanceModel.findOne({ userId: id, _id: user.settings.activeBalanceId }, (err, userBalance) => {
+        if (userBalance) {
+          userBalance.incomes = userBalance.incomes + income;
+          userBalance.balance = userBalance.balance + income;
 
-        userBalance.save((err) => {
-          err ? res.send(err) : res.json({ message: 'User balance updated' });
-        });
-      }
+          userBalance.save((err) => {
+            err ? res.send(err) : res.json({ message: 'User balance updated' });
+          });
+        }
+      });
     });
   }
 }

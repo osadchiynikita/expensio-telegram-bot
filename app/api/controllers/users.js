@@ -41,6 +41,24 @@ class UsersController {
    * Get user info
    */
 
+  updateUser(req, res) {
+    const { id } = req.params;
+    const { balance } = req.body;
+
+    UserModel.findOne({ userId: id }, (err, user) => {
+      if (err) res.send(err);
+      if (user) {
+        user.settings.activeBalanceId = balance._id;
+        user.save();
+        res.json({ message: 'User active balance updated', balance: balance });
+      }
+    });
+  }
+
+  /**
+   * Get user info
+   */
+
   getUser(req, res) {
     const { id } = req.params;
 

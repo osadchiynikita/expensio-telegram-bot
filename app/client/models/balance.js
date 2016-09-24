@@ -31,6 +31,11 @@ class BalanceModel {
         q: params.formMessage,
         error: params.formError,
         validator: (message, callback) => {
+
+          if (message.text === '/cancel') {
+            callback(true);
+          }
+
           const currency = this.getCurrency(message.text);
           if (currency) {
             callback(true, {
@@ -48,6 +53,11 @@ class BalanceModel {
 
   getCurrency(value) {
     return currencies.find(currency => currency.toLowerCase() === value.toLowerCase());
+  }
+
+  getBalanceInfoMessage(firstName, balanceData) {
+    const { currency, balance, expenses, incomes } = balanceData;
+    return `${firstName}, here is your current balance:\n\n<b>${balance} ${currency}</b>\n\n<pre>Expenses: ${expenses} ${currency}\nIncomes: ${incomes} ${currency}</pre>\n\nYou can use /addexpense and /addincome to manage your balance. Use /addbalance to create the new one.`;
   }
 }
 

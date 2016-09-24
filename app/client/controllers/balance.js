@@ -9,7 +9,7 @@ const request = require('superagent');
 class BalanceController extends TelegramBaseController {
 
   /**
-    * Create new group balance
+    * Create new balance
     * @param {Scope} $
    */
   addBalance($) {
@@ -17,15 +17,14 @@ class BalanceController extends TelegramBaseController {
     const balanceModel = new BalanceModel;
     const currencyForm = balanceModel.getBalanceCurrencyForm({
       formMessage: `What currency do you want to use? I understand UAH, USD, EUR, etc.`,
-      formError: `Not sure this is correct currency value, please try again.`
+      formError: `Not sure this is correct currency value, please try again or /cancel`
     });
 
     $.runForm(currencyForm, (result) => {
       const { currency } = result.formData;
 
-      request.post(`${config.env.apiUrl}/user/${id}/balance/add`)
-        .send({ currency })
-        .end((err, res) => {
+      if (currency) {
+        request.post(`${config.env.apiUrl}/user/${id}/balance/add`).send({ currency }).end((err, res) => {
           if (err) {
             console.error(err);
             $.sendMessage(`Sorry, something went wrong`);
@@ -35,6 +34,7 @@ class BalanceController extends TelegramBaseController {
             $.sendMessage(`I created new balance for your.\n\nCheck it /showbalance`);
           }
         });
+      }
 
     });
   }
@@ -46,14 +46,49 @@ class BalanceController extends TelegramBaseController {
   showBalance($) {
     const { id, firstName } = $.message.from;
 
-    request.get(`${config.env.apiUrl}/user/${id}/balance`).end((err, res) => {
+    request.get(`${config.env.apiUrl}/user/${id}/balance/active`).end((err, res) => {
       if (res && res.body) {
-        const { currency, balance, expenses, incomes } = res.body;
-        $.sendMessage(`${firstName}, here is your current balance:\n\n<pre>Balance: ${balance} ${currency}\nExpenses: ${expenses} ${currency}\nIncomes: ${incomes} ${currency}</pre>\nYou can use /addexpense and /addincome to manage your current balance. Use /addbalance to create the new one.`, {
-          parse_mode: 'html'
-        });
+        const balanceModel = new BalanceModel;
+        const balanceMessage = balanceModel.getBalanceInfoMessage(firstName, res.body);
+        $.sendMessage(balanceMessage, { parse_mode: 'html' });
       } else {
         $.sendMessage(`${firstName}, sorry, something went wrong`);
+      }
+    });
+  }
+
+  /**
+    * Switch to another balance
+    * @param {Scope} $
+   */
+  switchBalance($) {
+    const { id, firstName } = $.message.from;
+
+    request.get(`${config.env.apiUrl}/user/${id}/balances`).end((err, res) => {
+      if (res && res.body) {
+
+        const balanceMenu = res.body.map(balance => {
+          return {
+            text: `${balance.balance} ${balance.currency}`,
+            callback: () => {
+              request.put(`${config.env.apiUrl}/user/${id}`).send({ balance }).end((err, res) => {
+                if (err) console.error(err);
+                if (res && res.body) {
+                  const balanceModel = new BalanceModel;
+                  const balanceMessage = balanceModel.getBalanceInfoMessage(firstName, res.body.balance);
+                  $.sendMessage(balanceMessage, { parse_mode: 'html' });
+                }
+              });
+            }
+          };
+        });
+
+        $.runInlineMenu({
+          layout: 2,
+          method: 'sendMessage',
+          params: ['Which balance do you want to use?'],
+          menu: balanceMenu
+        });
       }
     });
   }
@@ -75,10 +110,8 @@ class BalanceController extends TelegramBaseController {
       const { user, value } = result.formData;
       const expense = value;
 
-      request.put(`${config.env.apiUrl}/user/${user.id}/balance/expenses`)
-        .send({ user, expense })
-        .end((err, res) => {
-          $.sendMessage(`Expense added, you can check your balance using /showbalance`);
+      request.put(`${config.env.apiUrl}/user/${user.id}/balance/expenses`).send({ user, expense }).end((err, res) => {
+        $.sendMessage(`Expense added, you can check your balance using /showbalance`);
       });
     });
   }
@@ -112,6 +145,7 @@ class BalanceController extends TelegramBaseController {
     return {
       '/addbalance': 'addBalance',
       '/showbalance': 'showBalance',
+      '/switchbalance': 'switchBalance',
       '/addexpense': 'addExpense',
       '/addincome': 'addIncome'
     }

@@ -13,5 +13,6 @@ const OtherwiseController = require('./controllers/otherwise');
 Bot.router.when(['/start'], new StartController());
 Bot.router.when(['/stop'], new StopController());
 Bot.router.when(['/getcountry', '/setcountry'], new SettingsController());
-Bot.router.when(['/addbalance', '/showbalance', '/addexpense', '/addincome'], new BalanceController());
+Bot.router.when(['/addbalance', '/showbalance', '/switchbalance', '/addexpense', '/addincome'], new BalanceController());
+Bot.router.when(['/cancel'], new OtherwiseController());
 Bot.router.otherwise(new OtherwiseController());
